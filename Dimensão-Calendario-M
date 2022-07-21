@@ -1,0 +1,21 @@
+let
+    Fonte = Consulta1(#date(2010, 1, 1), 3650, #duration(1, 0, 0, 0)),
+    #"Convertido para Tabela" = Table.FromList(Fonte, Splitter.SplitByNothing(), null, null, ExtraValues.Error),
+    #"Tipo Alterado com Localidade" = Table.TransformColumnTypes(#"Convertido para Tabela", {{"Column1", type date}}, "pt-BR"),
+    #"Colunas Renomeadas" = Table.RenameColumns(#"Tipo Alterado com Localidade",{{"Column1", "Data"}}),
+    #"Tipo Alterado com Localidade1" = Table.TransformColumnTypes(#"Colunas Renomeadas", {{"Data", type date}}, "pt-BR"),
+    #"Dia do Ano Inserido" = Table.AddColumn(#"Tipo Alterado com Localidade1", "Dia do Ano", each Date.DayOfYear([Data]), Int64.Type),
+    #"Índice Adicionado" = Table.AddIndexColumn(#"Dia do Ano Inserido", "Índice", 1, 1),
+    #"Colunas Removidas" = Table.RemoveColumns(#"Índice Adicionado",{"Dia do Ano"}),
+    #"Colunas Reordenadas" = Table.ReorderColumns(#"Colunas Removidas",{"Índice", "Data"}),
+    #"Colunas Renomeadas1" = Table.RenameColumns(#"Colunas Reordenadas",{{"Índice", "id"}}),
+    #"Ano Inserido" = Table.AddColumn(#"Colunas Renomeadas1", "Ano", each Date.Year([Data]), Int64.Type),
+    #"Mês Inserido" = Table.AddColumn(#"Ano Inserido", "Mês", each Date.Month([Data]), Int64.Type),
+    #"Nome do Mês Inserido" = Table.AddColumn(#"Mês Inserido", "Nome do Mês", each Date.MonthName([Data]), type text),
+    #"Semana do Mês Inserida" = Table.AddColumn(#"Nome do Mês Inserido", "Semana do Mês", each Date.WeekOfMonth([Data]), Int64.Type),
+    #"Dia da Semana Inserido" = Table.AddColumn(#"Semana do Mês Inserida", "Dia da Semana", each Date.DayOfWeek([Data]), Int64.Type),
+    #"Nome do Dia Inserido" = Table.AddColumn(#"Dia da Semana Inserido", "Nome do Dia", each Date.DayOfWeekName([Data]), type text),
+    #"Coluna Condicional Adicionada" = Table.AddColumn(#"Nome do Dia Inserido", "Fim de Semana", each if [Dia da Semana] = 6 then "Sim" else if [Dia da Semana] = 0 then "Sim" else "Não"),
+    #"Coluna Condicional Adicionada1" = Table.AddColumn(#"Coluna Condicional Adicionada", "Personalizar", each if [Mês] >= 6 then "Primeiro Semestre" else "Segundo Semestre")
+in
+    #"Coluna Condicional Adicionada1"
